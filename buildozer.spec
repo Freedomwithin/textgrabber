@@ -9,7 +9,7 @@ package.name = grabber4
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.jonathon
 
-# (str) Source code where the main.py live
+# (str) Source code where the main.py lives
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
@@ -35,7 +35,6 @@ version = 1.0
 requirements = python3,kivy==2.3.0,pillow,requests,pyjnius
 
 # (str) Custom source folders for requirements
-# Sets custom source for any requirements with recipes
 # requirements.source.kivy = ../../kivy
 
 # (list) Garden requirements
@@ -54,6 +53,9 @@ orientation = portrait
 fullscreen = 1
 
 # (str) Android API to use
+# Set to 35 for Android 15, but 30 is fine for compatibility.
+# If you want to target Android 15 specifically, uncomment the next line:
+# android.api = 35
 android.api = 30
 
 # (str) Minimum API required
@@ -83,8 +85,10 @@ android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORA
 # (bool) If True, then allow backup of the application
 android.allow_backup = True
 
-# (str) Supported architectures (armeabi-v7a, arm64-v8a, x86, x86_64)
-android.archs = armeabi-v7a
+# (str) Supported architectures
+# Add arm64-v8a for modern devices like Moto G 2025
+# armeabi-v7a is kept for compatibility with older devices
+android.archs = armeabi-v7a,arm64-v8a
 
 # (str) Notification icon (if not set, it will use the icon)
 #android.notification_icon = %(source.dir)s/data/notification_icon.png
