@@ -1,65 +1,125 @@
 [app]
-# Application title
+
+# (str) Title of your application
 title = Grabber4.0
 
-# Package name (lowercase, no spaces)
+# (str) Package name
 package.name = grabber4
 
-# Package domain (reverse DNS format)
+# (str) Package domain (needed for android/ios packaging)
 package.domain = org.jonathon
 
-# Directory containing your main.py
+# (str) Source code where the main.py live
 source.dir = .
 
-# File extensions to include in the build
+# (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,json,txt
 
-# Application version
+# (list) List of inclusions using pattern matching
+#source.include_patterns = assets/*,images/*.png
+
+# (list) Source files to exclude (let empty to not exclude anything)
+#source.exclude_exts = spec
+
+# (list) List of directory to exclude (let empty to not exclude anything)
+#source.exclude_dirs = tests, bin
+
+# (list) List of exclusions using pattern matching
+#source.exclude_patterns = license,images/*/*.jpg
+
+# (str) Application versioning (method 1)
 version = 1.0
 
-# Python requirements (comma-separated)
+# (list) Application requirements
+# comma separated e.g. requirements = sqlite3,kivy
 requirements = python3,kivy==2.3.0,pillow,requests,pyjnius
 
-# Screen orientation
-orientation = portrait
+# (str) Custom source folders for requirements
+# Sets custom source for any requirements with recipes
+# requirements.source.kivy = ../../kivy
 
-# Start in fullscreen
-fullscreen = 1
+# (list) Garden requirements
+#garden_requirements =
 
-# Android permissions (comma-separated)
-android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-
-# Android API level
-android.api = 30
-
-# Minimum Android API level
-android.minapi = 21
-
-# Android NDK version (must match your downloaded NDK)
-android.ndk = 25b
-
-# Path to your NDK (if you downloaded it manually)
-android.ndk_path = /root/.buildozer/android/platform/android-ndk-r25b-linux
-
-# Android build tools version
-android.build_tools_version = 34.0.0
-
-# Allow backup (default: True)
-android.allow_backup = True
-
-# Target architectures (comma-separated)
-android.archs = armeabi-v7a
-
-# (Optional) Presplash and icon (uncomment and set if you have them)
+# (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
+
+# (str) Icon of the application
 #icon.filename = %(source.dir)s/data/icon.png
 
-# (Optional) Notification icon (uncomment and set if you have it)
+# (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
+orientation = portrait
+
+# (bool) Indicate if the application should be fullscreen or not
+fullscreen = 1
+
+# (str) Android API to use
+android.api = 30
+
+# (str) Minimum API required
+android.minapi = 21
+
+# (str) Android SDK directory, if empty, it will be automatically detected.
+#android.sdk_path =
+
+# (str) Android NDK directory, if empty, it will be automatically detected.
+android.ndk_path = ~/.buildozer/android/platform/android-ndk-r25b-linux
+
+# (str) Android NDK version to use
+android.ndk = 25b
+
+# (str) Android build tools version to use
+android.build_tools_version = 34.0.0
+
+# (bool) If True, then automatically try to detect the NDK and SDK
+# android.auto_detect = True
+
+# (list) Permissions
+android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+
+# (int) Android incremental version code
+#android.numeric_version = 1
+
+# (bool) If True, then allow backup of the application
+android.allow_backup = True
+
+# (str) Supported architectures (armeabi-v7a, arm64-v8a, x86, x86_64)
+android.archs = armeabi-v7a
+
+# (str) Notification icon (if not set, it will use the icon)
 #android.notification_icon = %(source.dir)s/data/notification_icon.png
 
+# (str) Android branch of python-for-android to use
+p4a.branch = develop
+
 [buildozer]
-# Log level (0=error, 1=info, 2=debug)
+
+# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
 log_level = 2
 
-# Disable warning about running as root (useful for Colab)
+# (int) Display warning if buildozer is run as root (0 = False, 1 = True)
 warn_on_root = 0
+
+# (str) Path to build artifact storage, absolute or relative to spec file
+# build_dir = ./.buildozer
+
+# (str) Path to build output (i.e. .apk, .ipa) storage
+# bin_dir = ./bin
+
+#    -----------------------------------------------------------------------------
+#    List as sections
+#
+#    You can define all the "list" as [section:key].
+#    Each line will be considered as a option to the list.
+#    Let's take [app] / source.exclude_patterns.
+#    Instead of doing:
+#
+#[app]
+#source.exclude_patterns = license,images/*/*.jpg
+#
+#    This can be translated into:
+#
+#[app:source.exclude_patterns]
+#license
+#images/*/*.jpg
+#
