@@ -1,3 +1,15 @@
+import sys
+import traceback
+import os
+
+# Crash logging for Android (with robust path)
+def log_exception(exc_type, exc_value, exc_traceback):
+    crash_log_path = os.path.join(os.path.expanduser('~'), 'grabber4_crashlog.txt')
+    with open(crash_log_path, "w") as f:
+        traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
+sys.excepthook = log_exception
+
+# Main Kivy app
 import kivy
 kivy.require('2.0.0')
 
@@ -5,131 +17,50 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
+from kivy.uix.camera import Camera
 from kivy.core.window import Window
 
-import pytesseract
-from PIL import Image
-import datetime
-import re
-import os
+class Grabber4App(App):
+    def build(self):
+        # Set window size for desktop testing (ignored on Android)
+        Window.size = (400, 600)
+        self.title = "Grabber 4.0"
 
-print("✅ App is starting up...")  # Debug print on start
+        # Main layout
+        layout = BoxLayout(orientation='vertical', spacing=10, padding=10)
 
-class TextGrabberLayout(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', **kwargs)
+        # Camera widget
+        self.camera = Camera(resolution=(640, 480), play=True)
+        layout.add_widget(self.camera)
 
-        # Raw OCR text area
-        self.raw_text_area = TextInput(text='', readonly=True, size_hint_y=0.45)
-        self.add_widget(Label(text="📄 Raw OCR Text:", size_hint_y=0.05))
-        self.add_widget(self.raw_text_area)
+        # Label for results
+        self.result_label = Label(text="Press the button to grab text", size_hint_y=0.2)
+        layout.add_widget(self.result_label)
 
-        # Parsed text area
-        self.parsed_text_area = TextInput(text='', readonly=True, size_hint_y=0.45)
-        self.add_widget(Label(text="🔎 Parsed Fields:", size_hint_y=0.05))
-        self.add_widget(self.parsed_text_area)
+        # Button to trigger action
+        button = Button(text="Capture Text", size_hint_y=0.2)
+        button.bind(on_press=self.capture_and_ocr)
+        layout.add_widget(button)
 
-        button_box = BoxLayout(size_hint_y=0.1)
+        return layout
 
-        grab_btn = Button(text='📸 Grab Text')
-        grab_btn.bind(on_press=self.grab_text)
-        button_box.add_widget(grab_btn)
+    def capture_and_ocr(self, instance):
+        # Save the camera image (for demo, not used in OCR yet)
+        capture_path = os.path.join(os.path.expanduser('~'), 'grabber4_capture.png')
+        self.camera.export_to_png(capture_path)
 
-        save_raw_btn = Button(text='💾 Save Raw Text')
-        save_raw_btn.bind(on_press=self.save_raw_text)
-        button_box.add_widget(save_raw_btn)
-
-        save_parsed_btn = Button(text='💾 Save Parsed Data')
-        save_parsed_btn.bind(on_press=self.save_parsed_text)
-        button_box.add_widget(save_parsed_btn)
-
-        self.add_widget(button_box)
-
-        # Receipt-style regex patterns
-        self.terms = {
-            "Store:": r"(Store[:\-]?\s*)([A-Za-z0-9 &]+)",
-            "Date:": r"(Date[:\-]?\s*)(\d{2}/\d{2}/\d{4})",
-            "Subtotal:": r"(Subtotal[:\-]?\s*)(EUR\s*\d+\.\d{2})",
-            "Tax:": r"(Tax[:\-]?\s*)(EUR\s*\d+\.\d{2})",
-            "Total:": r"(Total[:\-]?\s*)(EUR\s*\d+\.\d{2})",
-            "Payment Method:": r"(Payment(?: Method)?[:\-]?\s*)([A-Za-z ]+)"
-        }
-
-    def grab_text(self, instance):
-        try:
-            image_path = "/home/jonathonkoerner/Pictures/screenshot.png"
-            print(f"🔍 Trying to open image at: {image_path}")
-
-            if not os.path.exists(image_path):
-                self.show_popup("Error", f"Image not found:\n{image_path}")
-                print("❌ Image not found.")
-                return
-
-            img = Image.open(image_path)
-            raw_text = pytesseract.image_to_string(img)
-            print("✅ OCR text extracted.")
-
-            self.raw_text_area.text = raw_text if raw_text.strip() else "No text detected."
-
-            parsed_results = self.extract_fields(raw_text)
-            parsed_text_lines = []
-            for key, val in parsed_results.items():
-                parsed_text_lines.append(f"{key} {val if val else 'Not found'}")
-            self.parsed_text_area.text = "\n".join(parsed_text_lines)
-            print("✅ Parsed fields updated.")
-
-        except Exception as e:
-            self.show_popup("Error", f"Failed to process image:\n{e}")
-            print(f"❌ Error during grab_text: {e}")
-
-    def extract_fields(self, text):
-        results = {}
-        for term, pattern in self.terms.items():
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                results[term] = match.group(2).strip()
-            else:
-                results[term] = None
-        return results
-
-    def save_raw_text(self, instance):
-        try:
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"textgrab_raw_{timestamp}.txt"
-            with open(filename, "w") as f:
-                f.write(self.raw_text_area.text)
-            self.show_popup("Success", f"Raw text saved to {filename}")
-            print(f"💾 Raw text saved to {filename}")
-        except Exception as e:
-            self.show_popup("Error", f"Failed to save raw text:\n{e}")
-            print(f"❌ Error saving raw text: {e}")
-
-    def save_parsed_text(self, instance):
-        try:
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"textgrab_parsed_{timestamp}.txt"
-            with open(filename, "w") as f:
-                f.write(self.parsed_text_area.text)
-            self.show_popup("Success", f"Parsed data saved to {filename}")
-            print(f"💾 Parsed data saved to {filename}")
-        except Exception as e:
-            self.show_popup("Error", f"Failed to save parsed data:\n{e}")
-            print(f"❌ Error saving parsed data: {e}")
+        # Simulate OCR (replace this with real OCR logic later)
+        # For real OCR, you'd use pytesseract or Google Vision here
+        # For now, just show a message
+        self.result_label.text = "Text capture started!\n(Replace this with your OCR logic.)"
+        self.show_popup("Info", "Image captured! Replace this with your OCR logic to extract text from the image.")
 
     def show_popup(self, title, message):
         popup = Popup(title=title,
-                      content=Label(text=message),
-                      size_hint=(None, None), size=(400, 200))
+                    content=Label(text=message),
+                    size_hint=(None, None), size=(400, 200))
         popup.open()
 
-class TextGrabberApp(App):
-    def build(self):
-        print("✅ Building layout...")
-        self.title = "Text Grabber Pro 3.0"
-        Window.size = (700, 600)
-        return TextGrabberLayout()
-
-if __name__ == '__main__':
-    TextGrabberApp().run()
+if __name__ == "__main__":
+    Grabber4App().run()
